@@ -11,7 +11,7 @@ import numpy as np
 import torch
 
 
-class ImageProcessor:
+class ublFuncAI:
     def __init__(self):
         self.all_req = {}
 
@@ -23,6 +23,7 @@ class ImageProcessor:
                 return BytesIO(img_data)
         except Exception as e:
             raise ValueError(f"Error fetching image data: {str(e)}")
+        
 
     async def process_body(self, post_body):
         try:
@@ -38,6 +39,7 @@ class ImageProcessor:
             return self.all_req
         except Exception as e:
             raise ValueError(f"Error processing body: {str(e)}")
+        
 
     async def check_image_quality(self, image_data: BytesIO, min_resolution=800, reflection_threshold=130, shadow_threshold=120):
         try:
@@ -61,18 +63,21 @@ class ImageProcessor:
             return listConfig
         except Exception as e:
             raise ValueError(f"Error checking image quality: {str(e)}")
+        
 
     async def read_image_async(self, image_data: BytesIO):
         try:
             return np.asarray(bytearray(image_data.read()), dtype=np.uint8)
         except Exception as e:
             raise ValueError(f"Error read_image_async: {str(e)}")
+        
 
     async def decode_image_async(self, image_array):
         try:
             return cv2.imdecode(image_array, cv2.IMREAD_COLOR)
         except Exception as e:
             raise ValueError(f"Error decode_image_async: {str(e)}")
+        
 
     async def assess_blur_async(self, img):
         try:
@@ -80,6 +85,7 @@ class ImageProcessor:
             return cv2.Laplacian(gray, cv2.CV_64F).var()
         except Exception as e:
             raise ValueError(f"Error assess_blur_async: {str(e)}")
+        
 
     async def assess_resolution_async(self, img, min_resolution):
         try:
@@ -87,6 +93,7 @@ class ImageProcessor:
             return "LowRes" if height < min_resolution or width < min_resolution else {}
         except Exception as e:
             raise ValueError(f"Error assess_resolution_async: {str(e)}")
+        
 
     async def assess_reflection_async(self, img, reflection_threshold):
         try:
@@ -94,6 +101,7 @@ class ImageProcessor:
             return "Reflected" if avg_intensity > reflection_threshold else {}
         except Exception as e:
             raise ValueError(f"Error assess_reflection_async: {str(e)}")
+        
 
     async def assess_shadow_async(self, img, shadow_threshold):
         try:
@@ -101,6 +109,7 @@ class ImageProcessor:
             return "Shadow" if avg_intensity < shadow_threshold else {}
         except Exception as e:
             raise ValueError(f"Error assess_shadow_async: {str(e)}")
+        
 
     async def object_detection(self, model, img_content,score):
         try:
@@ -117,6 +126,7 @@ class ImageProcessor:
             return detection
         except Exception as e:
             raise ValueError(f"Error in object detection: {str(e)}")
+        
     async def structureResult(predefined_data,conversionData,store,all_result,selfTalker,st):
         try:
             data = []
@@ -137,6 +147,7 @@ class ImageProcessor:
             return data
         except Exception as e:
             raise ValueError(f"Error in Structure Result: {str(e)}")
+        
 
 
     async def start_detection(self, predefined_data,store, details, img, selfTalker):
@@ -155,12 +166,13 @@ class ImageProcessor:
                     all_result.update(da)
                 if len(qpds)>0:
                     all_result.update(qpds)
-                final_result = await ImageProcessor.structureResult(predefined_data,convertionData,store,all_result,selfTalker,st)
+                final_result = await ublFuncAI.structureResult(predefined_data,convertionData,store,all_result,selfTalker,st)
                 details["image"].update({"quality":report})
                 resultForUser = {"sku":final_result}
                 return resultForUser
         except Exception as e:
             raise ValueError(f"Error in start detection: {str(e)}")
+        
         
 
     async def SOSstructureResult(conversionData,category,result):
@@ -179,6 +191,7 @@ class ImageProcessor:
             return data
         except Exception as e:
             raise ValueError(f"Error in SOS Structure Result: {str(e)}")
+        
 
 
     async def SOSstart_detection(self, category,details,img):
@@ -188,7 +201,7 @@ class ImageProcessor:
                 report = await self.check_image_quality(image)
                 sos = await asyncio.create_task(self.object_detection(sosModel, image,0.25))
                 if len(sos)>0:
-                    final_result = await ImageProcessor.SOSstructureResult(sos_convertion_data,category,sos)
+                    final_result = await ublFuncAI.SOSstructureResult(sos_convertion_data,category,sos)
                 else:
                     final_result = {}
                 details["image"].update({"quality":report})
@@ -196,6 +209,7 @@ class ImageProcessor:
                 return resultForUser
         except Exception as e:
             raise ValueError(f"Error in SOS start detection: {str(e)}")
+        
         
     def cleanup(self):
         torch.cuda.empty_cache()        

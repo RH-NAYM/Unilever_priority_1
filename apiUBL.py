@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import List, Union
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from mainUBL import ImageProcessor
+from mainUBL import ublFuncAI
 from datetime import datetime
 import pytz
 import logging
@@ -45,13 +45,14 @@ async def on_startup():
                 all_sku.update(items)
             predefined_data.update({slab:all_sku})
         print("Slab and SKU details:", predefined_data)
+        ublImageProcessingAPI.ublFunc.cleanup()
 
 app.add_event_handler("startup", on_startup)
 
 
-class ImageProcessorAPI:
+class ublFuncAPI:
     def __init__(self):
-        self.image_processor = ImageProcessor()
+        self.ublFunc = ublFuncAI()
 
     async def process_planogram(self, planogram, predefined_data):
         try:
@@ -60,10 +61,12 @@ class ImageProcessorAPI:
                 selfTalker = details.get("name", "")
                 img = details.get("image", {}).get("original", "")
                 if store and img:
-                    result = await self.image_processor.start_detection(predefined_data, store, details, img, selfTalker)
+                    result = await self.ublFunc.start_detection(predefined_data, store, details, img, selfTalker)
                     details.update(result)
         except requests.exceptions.RequestException as e:
             raise HTTPException(status_code=500, detail=f"Error process_planogram: {str(e)}")
+        finally:
+            self.ublFunc.cleanup()
 
     async def process_box(self, box):
         try:
@@ -71,10 +74,12 @@ class ImageProcessorAPI:
                 category = details.get("category", "")
                 img = details.get("image", {}).get("original", "")
                 if category and img:
-                    result = await self.image_processor.SOSstart_detection(category, details, img)
+                    result = await self.ublFunc.SOSstart_detection(category, details, img)
                     details.update(result)
         except requests.exceptions.RequestException as e:
             raise HTTPException(status_code=500, detail=f"Error process_box: {str(e)}")
+        finally:
+            self.ublFunc.cleanup()
 
     async def process_store(self, item, predefined_data):
         try:
@@ -85,6 +90,8 @@ class ImageProcessorAPI:
                 await self.process_box(item.get("box", []))
         except requests.exceptions.RequestException as e:
             raise HTTPException(status_code=500, detail=f"Error process_store: {str(e)}")
+        finally:
+            self.ublFunc.cleanup()
 
     async def process_items(self, items: Union[Item, List[Item]]):
         try:
@@ -94,6 +101,8 @@ class ImageProcessorAPI:
                 return await self.process_item(items)
         except requests.exceptions.RequestException as e:
             raise HTTPException(status_code=500, detail=f"Error process_items: {str(e)}")
+        finally:
+            self.ublFunc.cleanup()
 
     async def process_item(self, item: Item):
         try:
@@ -102,7 +111,8 @@ class ImageProcessorAPI:
         except requests.exceptions.RequestException as e:
             raise HTTPException(status_code=500, detail=f"Error process_item: {str(e)}")
         finally:
-            self.image_processor.cleanup()
+            self.ublFunc.cleanup()
+
 
     async def processBody(self, post_body):
         try:
@@ -110,13 +120,15 @@ class ImageProcessorAPI:
             await asyncio.gather(*tasks)
         except requests.exceptions.RequestException as e:
             raise HTTPException(status_code=500, detail=f"Error processBody: {str(e)}")
+        finally:
+            self.ublFunc.cleanup()
 def get_bd_time():
     bd_timezone = pytz.timezone("Asia/Dhaka")
     time_now = datetime.now(bd_timezone)
     current_time = time_now.strftime("%I:%M:%S %p")
     return current_time
 
-image_processor_api = ImageProcessorAPI()
+ublImageProcessingAPI = ublFuncAPI()
 
 planogram_data = None
 predefined_data = {}
@@ -128,7 +140,7 @@ async def status():
 @app.post("/unilever")
 async def create_items(items: Union[Item, List[Item]]):
     try:
-        results = await image_processor_api.process_items(items)
+        results = await ublImageProcessingAPI.process_items(items)
         return results
     except Exception as e:
         global total_error
@@ -143,10 +155,11 @@ async def create_items(items: Union[Item, List[Item]]):
         print("-"*100)
         print(f"Daily Execution Count : {total_done}")
         print(f"Time : {get_bd_time()}")
+        ublImageProcessingAPI.ublFunc.cleanup()
 
 if __name__ == "__main__":
     try:
         import uvicorn
         uvicorn.run(app, host="127.0.0.1", port=5656)
     finally:
-        image_processor_api.image_processor.cleanup()
+        ublImageProcessingAPI.ublFunc.cleanup()
