@@ -1,4 +1,6 @@
 # unilever_version_1
+# Github: https://github.com/RH-NAYM/Unilever_priority_1.git
+# HuggingFace: https://huggingface.co/rakib72642/UBL_Deploy_v1
 
 old:
 ----
