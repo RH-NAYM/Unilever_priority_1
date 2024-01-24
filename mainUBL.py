@@ -114,6 +114,7 @@ class ublFuncAI:
     async def object_detection(self, model, img_content,score):
         try:
             img = Image.open(img_content)
+            model.to(device=0)
             result = model(img,conf=score)
             detection = {}
             data = json.loads(result[0].tojson())
@@ -157,11 +158,14 @@ class ublFuncAI:
                 image = await self.get_image_data(img, session)
                 report = await self.check_image_quality(image)
                 tasks = [
-                            asyncio.create_task(self.object_detection(daModel, image,0.25)),
-                            asyncio.create_task(self.object_detection(qpdsModel, image,0.25)),
-                            asyncio.create_task(self.object_detection(qpdsModel, image,0.75))
+                            asyncio.create_task(self.object_detection(daModel, image,0.4)),
+                            asyncio.create_task(self.object_detection(qpdsModel, image,0.4)),
+                            asyncio.create_task(self.object_detection(qpdsModel, image,0.8))
                         ]
                 da, qpds, st = await asyncio.gather(*tasks)
+                print("Display Audit : ",da)
+                print("QPDS : ", qpds)
+                print("Shelf Talker : ",st)
                 if len(da)>0:
                     all_result.update(da)
                 if len(qpds)>0:
@@ -199,7 +203,8 @@ class ublFuncAI:
             async with ClientSession() as session:
                 image = await self.get_image_data(img, session)
                 report = await self.check_image_quality(image)
-                sos = await asyncio.create_task(self.object_detection(sosModel, image,0.25))
+                sos = await asyncio.create_task(self.object_detection(sosModel, image,0.4))
+                print("SOS : ",sos)
                 if len(sos)>0:
                     final_result = await ublFuncAI.SOSstructureResult(sos_convertion_data,category,sos)
                 else:

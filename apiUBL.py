@@ -49,7 +49,6 @@ async def on_startup():
 
 app.add_event_handler("startup", on_startup)
 
-
 class ublFuncAPI:
     def __init__(self):
         self.ublFunc = ublFuncAI()
