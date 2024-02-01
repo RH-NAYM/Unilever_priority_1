@@ -3,7 +3,7 @@ import pandas as pd
 from PIL import Image
 from aiohttp import ClientSession
 from io import BytesIO
-from Data.data import convertionData, self_talker, sos_convertion_data
+from Data.oldData import convertionData, self_talker, sos_convertion_data
 from Data.model import daModel, qpdsModel, sosModel
 import asyncio
 import cv2
@@ -205,10 +205,11 @@ class ublFuncAI:
                 report = await self.check_image_quality(image)
                 sos = await asyncio.create_task(self.object_detection(sosModel, image,0.4))
                 print("SOS : ",sos)
-                if len(sos)>0:
-                    final_result = await ublFuncAI.SOSstructureResult(sos_convertion_data,category,sos)
-                else:
-                    final_result = {}
+                # if len(sos)>0:
+                #     final_result = await ublFuncAI.SOSstructureResult(sos_convertion_data,category,sos)
+                # else:
+                #     final_result = {}
+                final_result = await ublFuncAI.SOSstructureResult(sos_convertion_data,category,sos)
                 details["image"].update({"quality":report})
                 resultForUser = {"sku":final_result}
                 return resultForUser

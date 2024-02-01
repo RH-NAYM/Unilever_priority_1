@@ -136,7 +136,7 @@ predefined_data = {}
 async def status():
     return {"message": "AI Server is running"}
 
-@app.post("/unilever")
+@app.post("/nlp")
 async def create_items(items: Union[Item, List[Item]]):
     try:
         results = await ublImageProcessingAPI.process_items(items)
